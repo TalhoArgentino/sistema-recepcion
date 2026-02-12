@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Recepción de Mercadería</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 400px;
+            margin: 100px auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            color: #1e293b;
+            font-size: 24px;
+        }
+
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #1e293b;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .scanner-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .scanner-input input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .scanner-input input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .product-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .product-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .product-item:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .product-name {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 15px;
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .product-code {
+            font-family: 'Courier New', monospace;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .product-stat {
+            text-align: center;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            min-width: 80px;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 2px;
+        }
+
+        .manual-input-inline {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 140px;
+        }
+
+        .manual-input-inline input {
+            width: 100px;
+            padding: 6px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .difference-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .difference-badge.positive {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .difference-badge.negative {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .actions button {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .admin-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fef3c7;
+            border-radius: 12px;
+            border: 2px solid #fbbf24;
+        }
+
+        .admin-section h3 {
+            color: #92400e;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f8fafc;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .product-catalog {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+
+        .catalog-item {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .catalog-item:last-child {
+            border-bottom: none;
+        }
+
+        .catalog-item:hover {
+            background: #f8fafc;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .icon-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .small-btn {
+            padding: 6px 12px;
+            font-size: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .small-btn-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .small-btn-danger:hover {
+            background: #fca5a5;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #1e293b;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+        }
+
+        .scan-detail-item {
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .add-product-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .add-product-form input[type="text"],
+        .add-product-form input[type="number"] {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+        }
+
+        .add-product-form label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px;
+            white-space: nowrap;
+        }
+
+        .barcode-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .barcode-chip {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .barcode-chip button {
+            background: none;
+            border: none;
+            color: #3730a3;
+            cursor: pointer;
+            padding: 0;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .barcode-input-section {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .history-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-date {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 14px;
+        }
+
+        .history-badge {
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .history-summary {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .info-box {
+            padding: 12px;
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Helper para códigos EAN-13
+        const parseBarcode = (barcode) => {
+            if (!barcode || barcode.length !== 13) return null;
+            
+            const prefix = barcode.substring(0, 2);
+            const productCode = barcode.substring(0, 7);
+            const weightCode = barcode.substring(7, 12);
+            
+            // Auto-detectar si tiene peso basado en el prefijo
+            const hasWeight = ['27', '29', '21'].includes(prefix);
+            const weight = hasWeight ? parseFloat(weightCode) / 1000 : 0;
+            
+            return { 
+                productCode, 
+                weight, 
+                hasWeight, 
+                fullCode: barcode 
+            };
+        };
+
+        // Función para buscar producto por cualquiera de sus códigos
+        const findProductByBarcode = (barcode, products) => {
+            const parsed = parseBarcode(barcode);
+            if (!parsed) return null;
+
+            // Buscar primero por código completo (para productos sin peso)
+            if (!parsed.hasWeight) {
+                for (const [mainCode, product] of Object.entries(products)) {
+                    if (mainCode === barcode) {
+                        return { product, mainCode };
+                    }
+                    if (product.altCodes && product.altCodes.includes(barcode)) {
+                        return { product, mainCode };
+                    }
+                }
+            }
+
+            // Si tiene peso, buscar por los primeros 7 dígitos
+            for (const [mainCode, product] of Object.entries(products)) {
+                const mainPrefix = mainCode.substring(0, 7);
+                if (mainPrefix === parsed.productCode) {
+                    return { product, mainCode };
+                }
+                if (product.altCodes) {
+                    for (const altCode of product.altCodes) {
+                        const altPrefix = altCode.substring(0, 7);
+                        if (altPrefix === parsed.productCode) {
+                            return { product, mainCode };
+                        }
+                    }
+                }
+            }
+            return null;
+        };
+
+        const Toast = ({ message, type, onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, []);
+
+            return (
+                <div className="toast">
+                    {type === 'success' ? '✓' : '✗'}
+                    <span>{message}</span>
+                </div>
+            );
+        };
+
+        // BASE DE DATOS DEFAULT DE PRODUCTOS - PUEDES MODIFICAR AQUÍ
+        const DEFAULT_PRODUCTS = {
+            // Ejemplo de productos - REEMPLAZA CON TUS PRODUCTOS REALES
+            // Formato: "codigo": { name: "Nombre", hasWeight: true/false, altCodes: ["codigo2", "codigo3"] }
+            
+            // "2700001000000": { name: "Producto con Peso Ejemplo", hasWeight: true, altCodes: [] },
+            // "1234567890123": { name: "Producto sin Peso Ejemplo", hasWeight: false, altCodes: ["9876543210123"] },
+        };
+
+        function App() {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [currentUser, setCurrentUser] = useState({ username: 'admin', role: 'admin' });
+            const [products, setProducts] = useState({});
+            const [currentList, setCurrentList] = useState([]);
+            const [history, setHistory] = useState([]);
+            const [activeTab, setActiveTab] = useState('scanner');
+            const [barcodeInput, setBarcodeInput] = useState('');
+            const [showModal, setShowModal] = useState(false);
+            const [modalContent, setModalContent] = useState(null);
+            const [toast, setToast] = useState(null);
+            const scannerInputRef = useRef(null);
+
+            // Cargar productos desde localStorage o usar DEFAULT al iniciar
+            useEffect(() => {
+                const saved = localStorage.getItem('warehouse_products');
+                if (saved) {
+                    try {
+                        setProducts(JSON.parse(saved));
+                    } catch (e) {
+                        console.error('Error loading products:', e);
+                        setProducts(DEFAULT_PRODUCTS);
+                    }
+                } else {
+                    setProducts(DEFAULT_PRODUCTS);
+                }
+            }, []);
+
+            // Guardar productos en localStorage cuando cambien
+            useEffect(() => {
+                if (Object.keys(products).length > 0) {
+                    localStorage.setItem('warehouse_products', JSON.stringify(products));
+                }
+            }, [products]);
+
+            const showToast = (message, type = 'success') => {
+                setToast({ message, type });
+            };
+
+            const handleLogin = () => {
+                setIsLoggedIn(true);
+                showToast('Sistema iniciado', 'success');
+            };
+
+            const handleLogout = () => {
+                if (window.confirm('¿Cerrar sesión? El historial actual se perderá.')) {
+                    setIsLoggedIn(false);
+                    setCurrentList([]);
+                    setHistory([]);
+                    setActiveTab('scanner');
+                }
+            };
+
+            const handleScan = (barcode) => {
+                const parsed = parseBarcode(barcode);
+                if (!parsed) {
+                    showToast('Código inválido (13 dígitos)', 'error');
+                    return;
+                }
+
+                const found = findProductByBarcode(barcode, products);
+                if (!found) {
+                    showToast(`Producto no encontrado: ${barcode}`, 'error');
+                    return;
+                }
+
+                const { product, mainCode } = found;
+                const existingIndex = currentList.findIndex(item => item.mainCode === mainCode);
+                
+                if (existingIndex >= 0) {
+                    const newList = [...currentList];
+                    if (parsed.hasWeight) {
+                        newList[existingIndex].totalWeight += parsed.weight;
+                    }
+                    newList[existingIndex].units += 1;
+                    newList[existingIndex].scans.push({ 
+                        barcode, 
+                        weight: parsed.weight,
+                        timestamp: new Date().toISOString() 
+                    });
+                    setCurrentList(newList);
+                } else {
+                    setCurrentList([...currentList, {
+                        mainCode: mainCode,
+                        name: product.name,
+                        hasWeight: product.hasWeight,
+                        units: 1,
+                        totalWeight: parsed.hasWeight ? parsed.weight : 0,
+                        manualQuantity: '',
+                        scans: [{ 
+                            barcode, 
+                            weight: parsed.weight,
+                            timestamp: new Date().toISOString() 
+                        }]
+                    }]);
+                }
+
+                showToast(`✓ ${product.name}`, 'success');
+                setBarcodeInput('');
+            };
+
+            const handleBarcodeSubmit = (e) => {
+                e.preventDefault();
+                if (barcodeInput.length === 13) {
+                    handleScan(barcodeInput);
+                } else {
+                    showToast('El código debe tener 13 dígitos', 'error');
+                }
+            };
+
+            const updateManualQuantity = (index, value) => {
+                const newList = [...currentList];
+                newList[index].manualQuantity = value;
+                setCurrentList(newList);
+            };
+
+            const calculateDifference = (item) => {
+                if (!item.manualQuantity) return null;
+                const manual = parseFloat(item.manualQuantity);
+                if (isNaN(manual)) return null;
+                
+                const scanned = item.hasWeight ? item.totalWeight : item.units;
+                return manual - scanned;
+            };
+
+            const showScanDetails = (item) => {
+                setModalContent(
+                    <div>
+                        <h4 style={{ marginBottom: '16px' }}>
+                            {item.name}
+                        </h4>
+                        <div style={{ marginBottom: '8px', fontSize: '13px', color: '#64748b' }}>
+                            Código principal: {item.mainCode}
+                        </div>
+                        <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
+                            <strong>Total escaneado:</strong> {item.units} unidades
+                            {item.hasWeight && ` • ${item.totalWeight.toFixed(3)} kg`}
+                        </div>
+                        <h4 style={{ marginBottom: '12px', fontSize: '14px', color: '#64748b' }}>
+                            Escaneos individuales ({item.scans.length}):
+                        </h4>
+                        {item.scans.map((scan, idx) => (
+                            <div key={idx} className="scan-detail-item">
+                                <div>
+                                    <strong>#{idx + 1}</strong>
+                                    <span style={{ marginLeft: '12px', fontFamily: 'Courier New, monospace', fontSize: '13px' }}>
+                                        {scan.barcode}
+                                    </span>
+                                    {scan.weight > 0 && (
+                                        <span style={{ marginLeft: '12px', color: '#667eea', fontWeight: '600' }}>
+                                            {scan.weight.toFixed(3)} kg
+                                        </span>
+                                    )}
+                                </div>
+                                <div style={{ fontSize: '12px', color: '#64748b' }}>
+                                    {new Date(scan.timestamp).toLocaleTimeString('es-AR')}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+                setShowModal(true);
+            };
+
+            const saveCurrentList = () => {
+                if (currentList.length === 0) {
+                    showToast('No hay productos para guardar', 'error');
+                    return;
+                }
+
+                const newHistory = [{
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    user: currentUser.username,
+                    items: currentList,
+                    totalProducts: currentList.length,
+                    totalUnits: currentList.reduce((sum, item) => sum + item.units, 0)
+                }, ...history];
+
+                setHistory(newHistory);
+                setCurrentList([]);
+                showToast('Lista guardada en historial', 'success');
+                setActiveTab('history');
+            };
+
+            const clearCurrentList = () => {
+                if (window.confirm('¿Limpiar la lista actual?')) {
+                    setCurrentList([]);
+                    showToast('Lista limpiada', 'success');
+                }
+            };
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                        const newProducts = { ...products };
+                        let count = 0;
+                        jsonData.forEach(row => {
+                            // Código principal (13 dígitos)
+                            const code = String(row.codigo || row.Codigo || row.CODIGO || row.codigo1 || row['Codigo 1'] || '');
+                            const name = row.nombre || row.Nombre || row.NOMBRE || '';
+                            
+                            // Auto-detectar si tiene peso
+                            const prefix = code.substring(0, 2);
+                            const hasWeight = ['27', '29', '21'].includes(prefix);
+                            
+                            if (code && name && code.length === 13) {
+                                // Códigos alternativos
+                                const altCodes = [];
+                                for (let i = 2; i <= 4; i++) {
+                                    const altCode = String(row[`codigo${i}`] || row[`Codigo ${i}`] || row[`codigo_${i}`] || '');
+                                    if (altCode && altCode.length === 13) {
+                                        altCodes.push(altCode);
+                                    }
+                                }
+                                
+                                newProducts[code] = { 
+                                    name, 
+                                    hasWeight,
+                                    altCodes: altCodes
+                                };
+                                count++;
+                            }
+                        });
+
+                        setProducts(newProducts);
+                        showToast(`${count} productos cargados`, 'success');
+                    } catch (error) {
+                        console.error('Error:', error);
+                        showToast('Error al leer el archivo Excel', 'error');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            };
+
+            const addProductManually = (code, name) => {
+                if (!code || !name || code.length !== 13) {
+                    showToast('Código debe ser 13 dígitos y nombre requerido', 'error');
+                    return;
+                }
+
+                // Auto-detectar si tiene peso
+                const prefix = code.substring(0, 2);
+                const hasWeight = ['27', '29', '21'].includes(prefix);
+
+                setProducts({...products, [code]: { name, hasWeight, altCodes: [] }});
+                showToast('Producto agregado', 'success');
+            };
+
+            const addAltCode = (mainCode, altCode) => {
+                if (!altCode || altCode.length !== 13) {
+                    showToast('Código alternativo debe tener 13 dígitos', 'error');
+                    return;
+                }
+
+                if (altCode === mainCode) {
+                    showToast('El código alternativo no puede ser igual al principal', 'error');
+                    return;
+                }
+
+                const newProducts = { ...products };
+                if (!newProducts[mainCode].altCodes) {
+                    newProducts[mainCode].altCodes = [];
+                }
+
+                if (newProducts[mainCode].altCodes.includes(altCode)) {
+                    showToast('Este código ya existe', 'error');
+                    return;
+                }
+
+                if (newProducts[mainCode].altCodes.length >= 3) {
+                    showToast('Máximo 3 códigos alternativos', 'error');
+                    return;
+                }
+
+                newProducts[mainCode].altCodes.push(altCode);
+                setProducts(newProducts);
+                showToast('Código alternativo agregado', 'success');
+            };
+
+            const removeAltCode = (mainCode, altCode) => {
+                const newProducts = { ...products };
+                newProducts[mainCode].altCodes = newProducts[mainCode].altCodes.filter(c => c !== altCode);
+                setProducts(newProducts);
+                showToast('Código alternativo eliminado', 'success');
+            };
+
+            const deleteProduct = (code) => {
+                if (!window.confirm(`¿Eliminar ${products[code].name}?`)) return;
+                
+                const newProducts = { ...products };
+                delete newProducts[code];
+                setProducts(newProducts);
+                showToast('Producto eliminado', 'success');
+            };
+
+            const exportToExcel = () => {
+                if (currentList.length === 0) {
+                    showToast('No hay datos para exportar', 'error');
+                    return;
+                }
+
+                // HOJA 1: Resumen consolidado
+                const summaryData = currentList.map(item => ({
+                    'Código': item.mainCode,
+                    'Producto': item.name,
+                    'Unidades': item.units,
+                    'Peso Total (kg)': item.hasWeight ? item.totalWeight.toFixed(3) : 'N/A',
+                    'Cantidad Manual': item.manualQuantity || '',
+                    'Diferencia': (() => {
+                        const diff = calculateDifference(item);
+                        return diff !== null ? diff.toFixed(3) : '';
+                    })()
+                }));
+
+                // HOJA 2: Detalle de todos los escaneos
+                const detailData = [];
+                currentList.forEach(item => {
+                    item.scans.forEach((scan, idx) => {
+                        detailData.push({
+                            'Producto': item.name,
+                            'Código Principal': item.mainCode,
+                            'Código Escaneado': scan.barcode,
+                            'Peso (kg)': scan.weight > 0 ? scan.weight.toFixed(3) : 'N/A',
+                            'Fecha/Hora': new Date(scan.timestamp).toLocaleString('es-AR'),
+                            'Nº Escaneo': idx + 1
+                        });
+                    });
+                });
+
+                const wb = XLSX.utils.book_new();
+                
+                const ws1 = XLSX.utils.json_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
+                
+                const ws2 = XLSX.utils.json_to_sheet(detailData);
+                XLSX.utils.book_append_sheet(wb, ws2, 'Detalle de Escaneos');
+                
+                XLSX.writeFile(wb, `recepcion_${new Date().toISOString().split('T')[0]}.xlsx`);
+                showToast('Exportado a Excel (2 hojas)', 'success');
+            };
+
+            useEffect(() => {
+                if (activeTab === 'scanner' && scannerInputRef.current) {
+                    scannerInputRef.current.focus();
+                }
+            }, [activeTab]);
+
+            if (!isLoggedIn) {
+                return <LoginScreen onLogin={handleLogin} />;
+            }
+
+            return (
+                <div className="app-container">
+                    <div className="header">
+                        <h1>📦 Sistema de Recepción</h1>
+                        <div className="header-info">
+                            <span className="user-badge">
+                                {currentUser.username}
+                            </span>
+                            <button className="icon-btn" onClick={handleLogout} title="Cerrar sesión">
+                                ⎋
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="tabs">
+                            <button 
+                                className={`tab ${activeTab === 'scanner' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('scanner')}
+                            >
+                                📱 Escanear
+                            </button>
+                            <button 
+                                className={`tab ${activeTab === 'admin' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('admin')}
+                            >
+                                ⚙️ Productos ({Object.keys(products).length})
+                            </button>
+                            <button 
+                                className={`tab ${activeTab === 'history' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('history')}
+                            >
+                                📋 Historial ({history.length})
+                            </button>
+                        </div>
+
+                        {activeTab === 'scanner' && (
+                            <ScannerTab
+                                currentList={currentList}
+                                barcodeInput={barcodeInput}
+                                setBarcodeInput={setBarcodeInput}
+                                handleBarcodeSubmit={handleBarcodeSubmit}
+                                updateManualQuantity={updateManualQuantity}
+                                calculateDifference={calculateDifference}
+                                saveCurrentList={saveCurrentList}
+                                clearCurrentList={clearCurrentList}
+                                exportToExcel={exportToExcel}
+                                scannerInputRef={scannerInputRef}
+                                showScanDetails={showScanDetails}
+                            />
+                        )}
+
+                        {activeTab === 'admin' && (
+                            <AdminTab
+                                products={products}
+                                handleFileUpload={handleFileUpload}
+                                addProductManually={addProductManually}
+                                deleteProduct={deleteProduct}
+                                addAltCode={addAltCode}
+                                removeAltCode={removeAltCode}
+                            />
+                        )}
+
+                        {activeTab === 'history' && (
+                            <HistoryTab 
+                                history={history} 
+                                setModalContent={setModalContent}
+                                setShowModal={setShowModal}
+                                showScanDetails={showScanDetails}
+                            />
+                        )}
+                    </div>
+
+                    {showModal && (
+                        <div className="modal" onClick={() => setShowModal(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h3>Detalle</h3>
+                                    <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
+                                </div>
+                                {modalContent}
+                            </div>
+                        </div>
+                    )}
+
+                    {toast && (
+                        <Toast 
+                            message={toast.message} 
+                            type={toast.type} 
+                            onClose={() => setToast(null)} 
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        const LoginScreen = ({ onLogin }) => {
+            return (
+                <div className="login-container">
+                    <div className="login-header">
+                        <h1>📦 Sistema de Recepción</h1>
+                        <p>Versión mejorada con detección automática</p>
+                    </div>
+                    <button onClick={onLogin} className="btn btn-primary">
+                        Iniciar Sistema
+                    </button>
+                    <div style={{ marginTop: '20px', padding: '12px', background: '#dcfce7', borderRadius: '8px', fontSize: '13px', color: '#166534' }}>
+                        <strong>✓ Mejoras incluidas:</strong><br/>
+                        • Códigos de 13 dígitos<br/>
+                        • Detección automática de peso (27, 29, 21)<br/>
+                        • Múltiples códigos por producto<br/>
+                        • Exporta 2 hojas Excel (resumen + detalle)
+                    </div>
+                </div>
+            );
+        };
+
+        const ScannerTab = ({ 
+            currentList, 
+            barcodeInput, 
+            setBarcodeInput, 
+            handleBarcodeSubmit,
+            updateManualQuantity,
+            calculateDifference,
+            saveCurrentList,
+            clearCurrentList,
+            exportToExcel,
+            scannerInputRef,
+            showScanDetails
+        }) => {
+            return (
+                <>
+                    <form onSubmit={handleBarcodeSubmit}>
+                        <div className="scanner-input">
+                            <input
+                                ref={scannerInputRef}
+                                type="text"
+                                value={barcodeInput}
+                                onChange={(e) => setBarcodeInput(e.target.value)}
+                                placeholder="Escanea código de barras (13 dígitos)"
+                                maxLength="13"
+                            />
+                            <button type="submit" className="btn btn-primary" style={{ width: 'auto', padding: '0 30px' }}>
+                                Agregar
+                            </button>
+                        </div>
+                    </form>
+
+                    <div className="product-list">
+                        {currentList.length === 0 ? (
+                            <div className="empty-state">
+                                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
+                                <p>No hay productos escaneados</p>
+                                <p style={{ fontSize: '13px', marginTop: '8px', color: '#64748b' }}>
+                                    Haz clic en un producto para ver el detalle de escaneos
+                                </p>
+                            </div>
+                        ) : (
+                            currentList.map((item, index) => {
+                                const diff = calculateDifference(item);
+                                return (
+                                    <div 
+                                        key={index} 
+                                        className="product-item"
+                                        onClick={() => showScanDetails(item)}
+                                        title="Click para ver detalle de escaneos"
+                                    >
+                                        <div className="product-name">
+                                            {item.name}
+                                            <div className="product-code">{item.mainCode.substring(0, 7)}...</div>
+                                        </div>
+                                        
+                                        <div className="product-stat">
+                                            <div className="stat-label">Unidades</div>
+                                            <div className="stat-value">{item.units}</div>
+                                        </div>
+
+                                        {item.hasWeight && (
+                                            <div className="product-stat">
+                                                <div className="stat-label">Peso</div>
+                                                <div className="stat-value">
+                                                    {item.totalWeight.toFixed(3)}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="manual-input-inline" onClick={(e) => e.stopPropagation()}>
+                                            <input
+                                                type="number"
+                                                step="0.001"
+                                                value={item.manualQuantity}
+                                                onChange={(e) => updateManualQuantity(index, e.target.value)}
+                                                placeholder="Manual"
+                                            />
+                                            {diff !== null && diff !== 0 && (
+                                                <span className={`difference-badge ${diff > 0 ? 'positive' : 'negative'}`}>
+                                                    {diff > 0 ? '+' : ''}{Math.abs(diff).toFixed(2)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    {currentList.length > 0 && (
+                        <>
+                            <div style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', display: 'flex', justifyContent: 'space-around' }}>
+                                <div>
+                                    <div style={{ fontSize: '12px', color: '#64748b' }}>Productos</div>
+                                    <div style={{ fontSize: '20px', fontWeight: '700' }}>{currentList.length}</div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '12px', color: '#64748b' }}>Unidades</div>
+                                    <div style={{ fontSize: '20px', fontWeight: '700' }}>
+                                        {currentList.reduce((sum, item) => sum + item.units, 0)}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '12px', color: '#64748b' }}>Peso Total</div>
+                                    <div style={{ fontSize: '20px', fontWeight: '700' }}>
+                                        {currentList.reduce((sum, item) => sum + (item.hasWeight ? item.totalWeight : 0), 0).toFixed(3)} kg
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="actions">
+                                <button className="btn btn-success" onClick={saveCurrentList}>
+                                    💾 Guardar
+                                </button>
+                                <button className="btn btn-secondary" onClick={exportToExcel}>
+                                    📥 Excel (2 hojas)
+                                </button>
+                                <button className="btn btn-danger" onClick={clearCurrentList}>
+                                    🗑️ Limpiar
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </>
+            );
+        };
+
+        const AdminTab = ({ 
+            products, 
+            handleFileUpload, 
+            addProductManually, 
+            deleteProduct,
+            addAltCode,
+            removeAltCode
+        }) => {
+            const [newProductCode, setNewProductCode] = useState('');
+            const [newProductName, setNewProductName] = useState('');
+            const [editingProduct, setEditingProduct] = useState(null);
+            const [newAltCode, setNewAltCode] = useState('');
+
+            const handleAdd = () => {
+                addProductManually(newProductCode, newProductName);
+                setNewProductCode('');
+                setNewProductName('');
+            };
+
+            const handleAddAltCode = (mainCode) => {
+                if (newAltCode) {
+                    addAltCode(mainCode, newAltCode);
+                    setNewAltCode('');
+                }
+            };
+
+            return (
+                <div>
+                    <div className="info-box">
+                        <strong>ℹ️ Detección automática de peso:</strong> Los códigos que comienzan con 27, 29 o 21 se marcan automáticamente como "con peso". Los demás como "sin peso".
+                    </div>
+
+                    <div className="admin-section">
+                        <h3>Cargar Productos desde Excel</h3>
+                        
+                        <div className="file-upload" onClick={() => document.getElementById('fileInput').click()}>
+                            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📄</div>
+                            <p style={{ fontWeight: 600 }}>Cargar Excel</p>
+                            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
+                                Columnas: codigo (13 dígitos), nombre, codigo2, codigo3, codigo4 (opcionales)
+                            </p>
+                            <input
+                                id="fileInput"
+                                type="file"
+                                accept=".xlsx,.xls"
+                                onChange={handleFileUpload}
+                            />
+                        </div>
+
+                        <div style={{ marginBottom: '16px' }}>
+                            <strong>O agregar manualmente:</strong>
+                            <div className="add-product-form">
+                                <input
+                                    type="text"
+                                    placeholder="Código (13 dígitos)"
+                                    value={newProductCode}
+                                    onChange={(e) => setNewProductCode(e.target.value)}
+                                    maxLength="13"
+                                    style={{ flex: '0 1 180px' }}
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Nombre"
+                                    value={newProductName}
+                                    onChange={(e) => setNewProductName(e.target.value)}
+                                    style={{ flex: '1 1 200px' }}
+                                />
+                                <button 
+                                    className="btn btn-primary" 
+                                    onClick={handleAdd}
+                                    style={{ width: 'auto', padding: '8px 20px' }}
+                                >
+                                    Agregar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="product-catalog">
+                            <div style={{ padding: '12px', background: '#f8fafc', fontWeight: 600, borderBottom: '2px solid #e2e8f0' }}>
+                                Productos ({Object.keys(products).length})
+                            </div>
+                            {Object.keys(products).length === 0 ? (
+                                <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                                    No hay productos. Carga un Excel o agrega manualmente.
+                                </div>
+                            ) : (
+                                Object.entries(products).map(([code, product]) => (
+                                    <div key={code}>
+                                        <div className="catalog-item">
+                                            <div style={{ flex: 1 }}>
+                                                <strong>{product.name}</strong><br/>
+                                                <small style={{ color: '#64748b' }}>
+                                                    Código: {code} • {product.hasWeight ? '⚖️ Con peso' : '📦 Sin peso'}
+                                                </small>
+                                                {product.altCodes && product.altCodes.length > 0 && (
+                                                    <div className="barcode-list">
+                                                        {product.altCodes.map(altCode => (
+                                                            <div key={altCode} className="barcode-chip">
+                                                                {altCode}
+                                                                <button onClick={() => removeAltCode(code, altCode)}>×</button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button 
+                                                    className="small-btn"
+                                                    style={{ background: '#e0e7ff', color: '#3730a3' }}
+                                                    onClick={() => setEditingProduct(editingProduct === code ? null : code)}
+                                                >
+                                                    + Código
+                                                </button>
+                                                <button 
+                                                    className="small-btn small-btn-danger"
+                                                    onClick={() => deleteProduct(code)}
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {editingProduct === code && (
+                                            <div className="barcode-input-section">
+                                                <div style={{ fontSize: '13px', marginBottom: '8px', color: '#64748b' }}>
+                                                    Agregar código alternativo ({product.altCodes?.length || 0}/3):
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Código alternativo (13 dígitos)"
+                                                        value={newAltCode}
+                                                        onChange={(e) => setNewAltCode(e.target.value)}
+                                                        maxLength="13"
+                                                        style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                                    />
+                                                    <button 
+                                                        className="btn btn-primary"
+                                                        onClick={() => handleAddAltCode(code)}
+                                                        style={{ width: 'auto', padding: '8px 20px' }}
+                                                    >
+                                                        Agregar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const HistoryTab = ({ history, setModalContent, setShowModal, showScanDetails }) => {
+            const viewDetails = (item) => {
+                setModalContent(
+                    <div>
+                        <div style={{ marginBottom: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px' }}>
+                            <strong>Fecha:</strong> {new Date(item.date).toLocaleString('es-AR')}<br/>
+                            <strong>Usuario:</strong> {item.user}<br/>
+                            <strong>Productos diferentes:</strong> {item.totalProducts}<br/>
+                            <strong>Unidades totales:</strong> {item.totalUnits}
+                        </div>
+                        <h4 style={{ marginBottom: '16px' }}>Productos:</h4>
+                        {item.items.map((product, idx) => (
+                            <div 
+                                key={idx} 
+                                style={{ 
+                                    padding: '12px', 
+                                    background: '#f8fafc', 
+                                    borderRadius: '8px', 
+                                    marginBottom: '12px',
+                                    cursor: 'pointer',
+                                    border: '1px solid #e2e8f0'
+                                }}
+                                onClick={() => showScanDetails(product)}
+                            >
+                                <strong>{product.name}</strong><br/>
+                                <small>Código: {product.mainCode}</small><br/>
+                                Unidades: {product.units} • Escaneos: {product.scans.length}<br/>
+                                {product.hasWeight && `Peso: ${product.totalWeight.toFixed(3)} kg`}<br/>
+                                {product.manualQuantity && `Manual: ${product.manualQuantity}`}
+                                <div style={{ fontSize: '11px', color: '#667eea', marginTop: '4px' }}>
+                                    Click para ver detalle de escaneos →
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+                setShowModal(true);
+            };
+
+            return (
+                <div className="history-list">
+                    {history.length === 0 ? (
+                        <div className="empty-state">
+                            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+                            <p>No hay recepciones guardadas</p>
+                        </div>
+                    ) : (
+                        history.map(item => (
+                            <div key={item.id} className="history-item" onClick={() => viewDetails(item)}>
+                                <div className="history-header">
+                                    <div className="history-date">
+                                        {new Date(item.date).toLocaleDateString('es-AR', { 
+                                            day: '2-digit', 
+                                            month: '2-digit', 
+                                            year: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </div>
+                                    <div className="history-badge">{item.totalProducts} productos</div>
+                                </div>
+                                <div className="history-summary">
+                                    {item.totalUnits} unidades totales
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
