@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sistema de Recepción de Mercadería</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -620,15 +619,15 @@
         // Helper para códigos EAN-13
         const parseBarcode = (barcode) => {
             if (!barcode || barcode.length !== 13) return null;
-            
+
             const prefix = barcode.substring(0, 2);
             const productCode = barcode.substring(0, 7);
             const weightCode = barcode.substring(7, 12);
-            
+
             // Auto-detectar si tiene peso basado en el prefijo
             const hasWeight = ['27', '29', '21'].includes(prefix);
             const weight = hasWeight ? parseFloat(weightCode) / 1000 : 0;
-            
+
             return { 
                 productCode, 
                 weight, 
@@ -686,30 +685,173 @@
             );
         };
 
-        // BASE DE DATOS DEFAULT DE PRODUCTOS - PUEDES MODIFICAR AQUÍ
+        // BASE DE DATOS DEFAULT DE PRODUCTOS CON LOS DATOS DEL EXCEL Y REGLAS APLICADAS
         const DEFAULT_PRODUCTS = {
-            // Ejemplo de productos - REEMPLAZA CON TUS PRODUCTOS REALES
-            // Formato: "codigo": { name: "Nombre", hasWeight: true/false, altCodes: ["codigo2", "codigo3"] }
-            
-            // "2700001000000": { name: "Producto con Peso Ejemplo", hasWeight: true, altCodes: [] },
-            // "1234567890123": { name: "Producto sin Peso Ejemplo", hasWeight: false, altCodes: ["9876543210123"] },
+            "7792798007547": { name: "Cerveza Quilmes 330cc", hasWeight: false, altCodes: [] },
+            "779187512137": { name: "Havanna Mardel 4 unidades", hasWeight: false, altCodes: [] },
+            "7790805131223": { name: "Intimo Blend (Cab-Mer-Malb)", hasWeight: false, altCodes: [] },
+            "7790577046572": { name: "Los Delirios del Mariscal Blend", hasWeight: false, altCodes: [] },
+            "7791875102137": { name: "Alfajor Havanna Mardel 4 unidades", hasWeight: false, altCodes: [] },
+            "7791875000228": { name: "Havannets 12 unidades", hasWeight: false, altCodes: [] },
+            "7796138000175": { name: "Coquena Tannat", hasWeight: false, altCodes: [] },
+            "7794450004215": { name: "Gran Enemigo GUALTALLARY", hasWeight: false, altCodes: [] },
+            "7794450005519": { name: "Gran Enemigo EL CEPILLO", hasWeight: false, altCodes: [] },
+            "7794450004208": { name: "Gran Enemigo AGRELO", hasWeight: false, altCodes: [] },
+            "2700003": { name: "Vacio por kg", hasWeight: true, altCodes: ["2720003"] },
+            "2700037": { name: "Peceto Arg x KG", hasWeight: true, altCodes: ["2720037"] },
+            "5608149030206": { name: "Quinta da Lapa Malbec Portugues", hasWeight: false, altCodes: [] },
+            "7793670006993": { name: "Yerba Verdeflor Hierbas Serranas 500gr", hasWeight: false, altCodes: [] },
+            "7793670400500": { name: "Yerba Verdeflor Peperina 500gr", hasWeight: false, altCodes: [] },
+            "7790326002064": { name: "Yerba Pampa Organica 500gr", hasWeight: false, altCodes: [] },
+            "779220000128": { name: "9 de Oro Agridulces", hasWeight: false, altCodes: [] },
+            "779220000159": { name: "9 de Oro Salados", hasWeight: false, altCodes: [] },
+            "7622201816384": { name: "Mantecol", hasWeight: false, altCodes: [] },
+            "2700045": { name: "Chinchulines Porc.", hasWeight: true, altCodes: ["2720045"] },
+            "2700043": { name: "Chorizo porc.", hasWeight: true, altCodes: ["2720043"] },
+            "2700046": { name: "Mollejas Porc.", hasWeight: true, altCodes: ["2720046"] },
+            "2700044": { name: "Morcilla porc.", hasWeight: true, altCodes: ["2720044"] },
+            "2700013": { name: "Morcilla Criolla por kg", hasWeight: true, altCodes: ["2720013"] },
+            "2700015": { name: "Chinchulines por kg", hasWeight: true, altCodes: ["2720015"] },
+            "2700012": { name: "Chorizo Criollo", hasWeight: true, altCodes: ["2720012"] },
+            "2700008": { name: "Mollejas de corazón por kg", hasWeight: true, altCodes: ["2720008"] },
+            "2720070": { name: "Bife de Chorizo Arg 250gr", hasWeight: true, altCodes: ["2700070"] },
+            "2720030": { name: "Bife de Chorizo Arg 500gr", hasWeight: true, altCodes: ["2700030"] },
+            "2720068": { name: "Bife de Chorizo Arg Entero", hasWeight: true, altCodes: ["2700068"] },
+            "2720020": { name: "Bife de chorizo Arg x kg", hasWeight: true, altCodes: ["2700020"] },
+            "2720023": { name: "Colita de Cuadril Arg x kg", hasWeight: true, altCodes: ["2700023"] },
+            "2720069": { name: "Corazon de Cuadril Arg 250gr", hasWeight: true, altCodes: ["2700069"] },
+            "2720026": { name: "Corazon de Cuadril Arg x kg", hasWeight: true, altCodes: ["2700026"] },
+            "2720024": { name: "Entrañas Arg x kg", hasWeight: true, altCodes: ["2700024"] },
+            "2720028": { name: "Lomo Arg x kg", hasWeight: true, altCodes: ["2700028"] },
+            "2720034": { name: "Lomo Arg Porc.", hasWeight: true, altCodes: ["2700034"] },
+            "2720029": { name: "Medialuna de vacio Arg x kg", hasWeight: true, altCodes: ["2700029"] },
+            "2700064": { name: "Medallon corazon de cuadril", hasWeight: true, altCodes: ["2720064"] },
+            "2720071": { name: "Ojo de Bife Arg 250gr", hasWeight: true, altCodes: ["2700071"] },
+            "2720031": { name: "Ojo de Bife Arg 500gr", hasWeight: true, altCodes: ["2700031"] },
+            "2720021": { name: "Ojo de bife Arg x kg", hasWeight: true, altCodes: ["2700021"] },
+            "2700036": { name: "Peceto Arg Bifes", hasWeight: true, altCodes: ["2720036"] },
+            "2720022": { name: "Picaña Arg x kg", hasWeight: true, altCodes: ["2700022"] },
+            "2720033": { name: "Picaña Arg Porc.", hasWeight: true, altCodes: ["2700033"] },
+            "2720019": { name: "Vacio Arg x kg", hasWeight: true, altCodes: ["2700019"] },
+            "2720038": { name: "Nalga para Milanesa Arg 500Gr", hasWeight: true, altCodes: ["2700038"] },
+            "2720014": { name: "Nalga para Milanesa Arg x kg", hasWeight: true, altCodes: ["2700014"] },
+            "2700002": { name: "Banderita por kg", hasWeight: true, altCodes: ["2720002"] },
+            "2700041": { name: "Costillar Deshuesado Arg.", hasWeight: true, altCodes: ["2720041"] },
+            "2700011": { name: "Bife de Chorizo x kg", hasWeight: true, altCodes: ["2720011"] },
+            "2700006": { name: "Bife ancho x kg", hasWeight: true, altCodes: ["2720006"] },
+            "2720009": { name: "Entraña por kg", hasWeight: true, altCodes: ["2700009"] },
+            "2700004": { name: "Matambre de Vaca", hasWeight: true, altCodes: ["2720004"] },
+            "2700005": { name: "Matambrito x kg", hasWeight: true, altCodes: ["2720005"] },
+            "2700042": { name: "Falda Arg.", hasWeight: true, altCodes: ["2720042"] },
+            "2700007": { name: "Carne para Estufar", hasWeight: true, altCodes: ["2720007"] },
+            "2700001": { name: "Tira de asado por kg", hasWeight: true, altCodes: ["2720001"] },
+            "2700050": { name: "Vacio entero", hasWeight: true, altCodes: ["2720050"] },
+            "2700016": { name: "Picaña por kg", hasWeight: true, altCodes: ["2720016"] },
+            "2700049": { name: "Costillar", hasWeight: true, altCodes: ["2720049"] },
+            "270005500007": { name: "Aji molido seco x un.", hasWeight: true, altCodes: [] },
+            "8425206001286": { name: "Chimichurri Doña Petrona normal x un.", hasWeight: false, altCodes: [] },
+            "270005400008": { name: "Chimichurri seco x un.", hasWeight: true, altCodes: [] },
+            "270005100001": { name: "Chimichurri Talho Argentino normal x un.", hasWeight: true, altCodes: [] },
+            "27000520000": { name: "Chimichurri Talho Argentino picante x un.", hasWeight: true, altCodes: [] },
+            "7790127000764": { name: "Chimichurri Vanoli", hasWeight: false, altCodes: [] },
+            "7790150497081": { name: "Condimento para milanesa x un.", hasWeight: false, altCodes: [] },
+            "7791004000068": { name: "Sal Parrillera Celusal 1kg", hasWeight: false, altCodes: [] },
+            "7791875000020": { name: "Alfajores Havanna 12 unidades", hasWeight: false, altCodes: [] },
+            "7791875006091": { name: "Alfajores Havanna 6 unidades Chocolate", hasWeight: false, altCodes: [] },
+            "7791875000013": { name: "Alfajores Havanna 6 unidades mixto", hasWeight: false, altCodes: [] },
+            "7791875006107": { name: "Alfajores Havanna 6u Merengue", hasWeight: false, altCodes: [] },
+            "7791875101659": { name: "Alfajores super dulce de leche 4un.", hasWeight: false, altCodes: [] },
+            "77958921": { name: "Bon o Bon Unidad", hasWeight: false, altCodes: [] },
+            "7790040429406": { name: "Chocolinas", hasWeight: false, altCodes: [] },
+            "7791875100003": { name: "Dulce de leche Havanna 250gr", hasWeight: false, altCodes: [] },
+            "7791875005353": { name: "Dulce de leche Havanna 450gr", hasWeight: false, altCodes: [] },
+            "7795735000328": { name: "Biszcochos Don Satur Salados", hasWeight: false, altCodes: [] },
+            "7795735000335": { name: "Biscochos Don Satur Dulce", hasWeight: false, altCodes: [] },
+            "7730241003661": { name: "Yerba Canarias 0.5 kg", hasWeight: false, altCodes: [] },
+            "7730241003654": { name: "Yerba Canarias 1kg", hasWeight: false, altCodes: [] },
+            "7790387015324": { name: "Yerba Mañanita 0.5 kg", hasWeight: false, altCodes: [] },
+            "7790387015317": { name: "Yerba Mañanita 1kg", hasWeight: false, altCodes: [] },
+            "7793704000911": { name: "Yerba Playadito 0.5 kg", hasWeight: false, altCodes: [] },
+            "7793704000928": { name: "Yerba Playadito 1kg", hasWeight: false, altCodes: [] },
+            "7790387110234": { name: "Yerba Taragui 0.5 kg", hasWeight: false, altCodes: [] },
+            "7790387110159": { name: "Yerba Taragui 1kg", hasWeight: false, altCodes: [] },
+            "270001700007": { name: "Empanadas Congeladas 3 unidades", hasWeight: true, altCodes: ["272001700007"] },
+            "837655128342": { name: "Carbon Argentino 10kg", hasWeight: false, altCodes: [] },
+            "837655127666": { name: "Carbon Argentino 3kg", hasWeight: false, altCodes: [] },
+            "837655128519": { name: "Carbon Kamados 7kg", hasWeight: false, altCodes: [] },
+            "837655128014": { name: "Encendedor", hasWeight: false, altCodes: [] },
+            "7790070433169": { name: "Pan Rallado Preferido", hasWeight: false, altCodes: [] },
+            "5603700058989": { name: "Provoletera", hasWeight: false, altCodes: [] },
+            "7795711008539": { name: "Tapa para empanadas Fargo 14cm", hasWeight: false, altCodes: [] },
+            "7790070631053": { name: "Tapa para Empanadas La Salteña", hasWeight: false, altCodes: [] },
+            "7790070631060": { name: "Tapa de empanadas La Salteña Criollas", hasWeight: false, altCodes: [] },
+            "2700010": { name: "Provoleta por kg", hasWeight: true, altCodes: ["2720010"] },
+            "7794450008084": { name: "Álamos Malbec", hasWeight: false, altCodes: [] },
+            "7794450008275": { name: "Angelica Zapata Malbec 2020", hasWeight: false, altCodes: [] },
+            "7794450008961": { name: "Angelica Zapata Merlot 2016", hasWeight: false, altCodes: [] },
+            "7790805120708": { name: "Black River Malbec", hasWeight: false, altCodes: [] },
+            "7790805130004": { name: "Black River Merlot", hasWeight: false, altCodes: [] },
+            "7790805730112": { name: "Black River Sauvignon Blanc", hasWeight: false, altCodes: [] },
+            "7794450008053": { name: "Catena Malbec", hasWeight: false, altCodes: [] },
+            "7794450090096": { name: "DV Catena Malbec-Malbec", hasWeight: false, altCodes: [] },
+            "7794450005199": { name: "Catena Tinto Historico", hasWeight: false, altCodes: [] },
+            "7794450002822": { name: "El Enemigo Bonarda", hasWeight: false, altCodes: [] },
+            "7794450003645": { name: "El Enemigo Cabernet Franc", hasWeight: false, altCodes: [] },
+            "7794450000972": { name: "El Enemigo Malbec", hasWeight: false, altCodes: [] },
+            "7798136300158": { name: "El Esteco Malbec", hasWeight: false, altCodes: [] },
+            "7790703167652": { name: "Famiglia Bianchi Chardonnay", hasWeight: false, altCodes: [] },
+            "7798126082415": { name: "Gran Enemigo blend 2020", hasWeight: false, altCodes: [] },
+            "7798126082279": { name: "Luca Pinot Noir", hasWeight: false, altCodes: [] },
+            "7791203001231": { name: "Luigi Bosca Malbec", hasWeight: false, altCodes: [] },
+            "7790762052838": { name: "La Mascota Cabernet Franc", hasWeight: false, altCodes: [] },
+            "7790762050124": { name: "La Mascota Malbec", hasWeight: false, altCodes: [] },
+            "7792319972002": { name: "Norton Vacazada Malbec", hasWeight: false, altCodes: [] },
+            "7790577002332": { name: "Pequeña Vasija malbec", hasWeight: false, altCodes: [] },
+            "7790577043274": { name: "Rutini Dominio Malbec", hasWeight: false, altCodes: [] },
+            "7791250002014": { name: "San Telmo Malbec 2023", hasWeight: false, altCodes: [] },
+            "7791250002274": { name: "San Telmo Torrontes", hasWeight: false, altCodes: [] },
+            "7790240042412": { name: "Trapiche Manos malbec 2005", hasWeight: false, altCodes: [] },
+            "7790240072808": { name: "Trapiche Reserva Malbec", hasWeight: false, altCodes: [] },
+            "7790577002165": { name: "Trumpeter Malbec", hasWeight: false, altCodes: [] },
+            "7790577041553": { name: "Trumpeter Reserva Malbec", hasWeight: false, altCodes: [] },
+            "7790577002189": { name: "Trumpeter Chardonnay", hasWeight: false, altCodes: [] },
+            "7790577040617": { name: "Trumpeter Pinot Noir", hasWeight: false, altCodes: [] },
+            "7790577040525": { name: "Trumpeter Sauvignon Blanc", hasWeight: false, altCodes: [] },
+            "723849631142": { name: "Cerveza Bah American 33CL", hasWeight: false, altCodes: [] },
+            "723849631159": { name: "Cerveza Bah Belgian 33CL", hasWeight: false, altCodes: [] },
+            "723849631111": { name: "Cerveza Bah Ipa 33cl", hasWeight: false, altCodes: [] },
+            "723849631203": { name: "Cerveza Bah Neipa 44CL", hasWeight: false, altCodes: [] },
+            "723849631173": { name: "Cerveza Bah Session 44CL", hasWeight: false, altCodes: [] },
+            "723849631180": { name: "Cerveza Bah Stout", hasWeight: false, altCodes: [] },
+            "8053629030134": { name: "Cerveza Buenos Ayres", hasWeight: false, altCodes: [] },
+            "7790290101602": { name: "Fernet Branca Argentino", hasWeight: false, altCodes: [] },
+            "7790703167744": { name: "Bianchi Particular Malbec", hasWeight: false, altCodes: [] },
+            "7798185960396": { name: "MANOS NEGRAS CHARDONNAY 2021", hasWeight: false, altCodes: [] },
+            "7798370880119": { name: "The Llama Torrontes", hasWeight: false, altCodes: [] },
+            "7790314055867": { name: "Buenos Aires Malbec 2024", hasWeight: false, altCodes: [] },
+            "7790189042757": { name: "El Esteco Old Vines Criolla", hasWeight: false, altCodes: [] },
+            "2720067": { name: "Ojo de bife Arg Entero", hasWeight: true, altCodes: ["2700067"] },
+            "2720090": { name: "Nalga para Milanesa Arg Entera", hasWeight: true, altCodes: ["2700090"] },
+            "2700040": { name: "Milanesas Preparadas", hasWeight: true, altCodes: ["2720040"] },
+            "2700018": { name: "Empanadas Congeladas Carne Picante 3Un.", hasWeight: true, altCodes: ["2720018"] },
+            "2700025": { name: "Peceto Arg. Entero", hasWeight: true, altCodes: ["2720025"] },
+            "2901311": { name: "Nalga Fina x kg", hasWeight: true, altCodes: [] }
         };
 
         function App() {
-            const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [currentUser, setCurrentUser] = useState({ username: 'admin', role: 'admin' });
-            const [products, setProducts] = useState({});
-            const [currentList, setCurrentList] = useState([]);
-            const [history, setHistory] = useState([]);
-            const [activeTab, setActiveTab] = useState('scanner');
-            const [barcodeInput, setBarcodeInput] = useState('');
-            const [showModal, setShowModal] = useState(false);
-            const [modalContent, setModalContent] = useState(null);
-            const [toast, setToast] = useState(null);
-            const scannerInputRef = useRef(null);
+            const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+            const [currentUser, setCurrentUser] = React.useState({ username: 'admin', role: 'admin' });
+            const [products, setProducts] = React.useState(DEFAULT_PRODUCTS);
+            const [currentList, setCurrentList] = React.useState([]);
+            const [history, setHistory] = React.useState([]);
+            const [activeTab, setActiveTab] = React.useState('scanner');
+            const [barcodeInput, setBarcodeInput] = React.useState('');
+            const [showModal, setShowModal] = React.useState(false);
+            const [modalContent, setModalContent] = React.useState(null);
+            const [toast, setToast] = React.useState(null);
+            const scannerInputRef = React.useRef(null);
 
-            // Cargar productos desde localStorage o usar DEFAULT al iniciar
-            useEffect(() => {
+            React.useEffect(() => {
                 const saved = localStorage.getItem('warehouse_products');
                 if (saved) {
                     try {
@@ -723,8 +865,7 @@
                 }
             }, []);
 
-            // Guardar productos en localStorage cuando cambien
-            useEffect(() => {
+            React.useEffect(() => {
                 if (Object.keys(products).length > 0) {
                     localStorage.setItem('warehouse_products', JSON.stringify(products));
                 }
@@ -763,7 +904,7 @@
 
                 const { product, mainCode } = found;
                 const existingIndex = currentList.findIndex(item => item.mainCode === mainCode);
-                
+
                 if (existingIndex >= 0) {
                     const newList = [...currentList];
                     if (parsed.hasWeight) {
@@ -815,7 +956,7 @@
                 if (!item.manualQuantity) return null;
                 const manual = parseFloat(item.manualQuantity);
                 if (isNaN(manual)) return null;
-                
+
                 const scanned = item.hasWeight ? item.totalWeight : item.units;
                 return manual - scanned;
             };
@@ -887,119 +1028,6 @@
                 }
             };
 
-            const handleFileUpload = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const data = new Uint8Array(event.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
-                        const newProducts = { ...products };
-                        let count = 0;
-                        jsonData.forEach(row => {
-                            // Código principal (13 dígitos)
-                            const code = String(row.codigo || row.Codigo || row.CODIGO || row.codigo1 || row['Codigo 1'] || '');
-                            const name = row.nombre || row.Nombre || row.NOMBRE || '';
-                            
-                            // Auto-detectar si tiene peso
-                            const prefix = code.substring(0, 2);
-                            const hasWeight = ['27', '29', '21'].includes(prefix);
-                            
-                            if (code && name && code.length === 13) {
-                                // Códigos alternativos
-                                const altCodes = [];
-                                for (let i = 2; i <= 4; i++) {
-                                    const altCode = String(row[`codigo${i}`] || row[`Codigo ${i}`] || row[`codigo_${i}`] || '');
-                                    if (altCode && altCode.length === 13) {
-                                        altCodes.push(altCode);
-                                    }
-                                }
-                                
-                                newProducts[code] = { 
-                                    name, 
-                                    hasWeight,
-                                    altCodes: altCodes
-                                };
-                                count++;
-                            }
-                        });
-
-                        setProducts(newProducts);
-                        showToast(`${count} productos cargados`, 'success');
-                    } catch (error) {
-                        console.error('Error:', error);
-                        showToast('Error al leer el archivo Excel', 'error');
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            };
-
-            const addProductManually = (code, name) => {
-                if (!code || !name || code.length !== 13) {
-                    showToast('Código debe ser 13 dígitos y nombre requerido', 'error');
-                    return;
-                }
-
-                // Auto-detectar si tiene peso
-                const prefix = code.substring(0, 2);
-                const hasWeight = ['27', '29', '21'].includes(prefix);
-
-                setProducts({...products, [code]: { name, hasWeight, altCodes: [] }});
-                showToast('Producto agregado', 'success');
-            };
-
-            const addAltCode = (mainCode, altCode) => {
-                if (!altCode || altCode.length !== 13) {
-                    showToast('Código alternativo debe tener 13 dígitos', 'error');
-                    return;
-                }
-
-                if (altCode === mainCode) {
-                    showToast('El código alternativo no puede ser igual al principal', 'error');
-                    return;
-                }
-
-                const newProducts = { ...products };
-                if (!newProducts[mainCode].altCodes) {
-                    newProducts[mainCode].altCodes = [];
-                }
-
-                if (newProducts[mainCode].altCodes.includes(altCode)) {
-                    showToast('Este código ya existe', 'error');
-                    return;
-                }
-
-                if (newProducts[mainCode].altCodes.length >= 3) {
-                    showToast('Máximo 3 códigos alternativos', 'error');
-                    return;
-                }
-
-                newProducts[mainCode].altCodes.push(altCode);
-                setProducts(newProducts);
-                showToast('Código alternativo agregado', 'success');
-            };
-
-            const removeAltCode = (mainCode, altCode) => {
-                const newProducts = { ...products };
-                newProducts[mainCode].altCodes = newProducts[mainCode].altCodes.filter(c => c !== altCode);
-                setProducts(newProducts);
-                showToast('Código alternativo eliminado', 'success');
-            };
-
-            const deleteProduct = (code) => {
-                if (!window.confirm(`¿Eliminar ${products[code].name}?`)) return;
-                
-                const newProducts = { ...products };
-                delete newProducts[code];
-                setProducts(newProducts);
-                showToast('Producto eliminado', 'success');
-            };
-
             const exportToExcel = () => {
                 if (currentList.length === 0) {
                     showToast('No hay datos para exportar', 'error');
@@ -1035,18 +1063,18 @@
                 });
 
                 const wb = XLSX.utils.book_new();
-                
+
                 const ws1 = XLSX.utils.json_to_sheet(summaryData);
                 XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
-                
+
                 const ws2 = XLSX.utils.json_to_sheet(detailData);
                 XLSX.utils.book_append_sheet(wb, ws2, 'Detalle de Escaneos');
-                
+
                 XLSX.writeFile(wb, `recepcion_${new Date().toISOString().split('T')[0]}.xlsx`);
                 showToast('Exportado a Excel (2 hojas)', 'success');
             };
 
-            useEffect(() => {
+            React.useEffect(() => {
                 if (activeTab === 'scanner' && scannerInputRef.current) {
                     scannerInputRef.current.focus();
                 }
@@ -1111,11 +1139,7 @@
                         {activeTab === 'admin' && (
                             <AdminTab
                                 products={products}
-                                handleFileUpload={handleFileUpload}
-                                addProductManually={addProductManually}
-                                deleteProduct={deleteProduct}
-                                addAltCode={addAltCode}
-                                removeAltCode={removeAltCode}
+                                setProducts={setProducts}
                             />
                         )}
 
@@ -1227,7 +1251,7 @@
                                             {item.name}
                                             <div className="product-code">{item.mainCode.substring(0, 7)}...</div>
                                         </div>
-                                        
+
                                         <div className="product-stat">
                                             <div className="stat-label">Unidades</div>
                                             <div className="stat-value">{item.units}</div>
@@ -1299,30 +1323,68 @@
             );
         };
 
-        const AdminTab = ({ 
-            products, 
-            handleFileUpload, 
-            addProductManually, 
-            deleteProduct,
-            addAltCode,
-            removeAltCode
-        }) => {
-            const [newProductCode, setNewProductCode] = useState('');
-            const [newProductName, setNewProductName] = useState('');
-            const [editingProduct, setEditingProduct] = useState(null);
-            const [newAltCode, setNewAltCode] = useState('');
+        const AdminTab = ({ products, setProducts }) => {
+            const [newProductCode, setNewProductCode] = React.useState('');
+            const [newProductName, setNewProductName] = React.useState('');
+            const [editingProduct, setEditingProduct] = React.useState(null);
+            const [newAltCode, setNewAltCode] = React.useState('');
 
-            const handleAdd = () => {
-                addProductManually(newProductCode, newProductName);
+            const addProductManually = () => {
+                if (!newProductCode || !newProductName || newProductCode.length !== 13) {
+                    alert('Código debe ser 13 dígitos y nombre requerido');
+                    return;
+                }
+
+                const prefix = newProductCode.substring(0, 2);
+                const hasWeight = ['27', '29', '21'].includes(prefix);
+
+                setProducts({ ...products, [newProductCode]: { name: newProductName, hasWeight, altCodes: [] } });
                 setNewProductCode('');
                 setNewProductName('');
             };
 
-            const handleAddAltCode = (mainCode) => {
-                if (newAltCode) {
-                    addAltCode(mainCode, newAltCode);
-                    setNewAltCode('');
+            const addAltCode = (mainCode) => {
+                if (!newAltCode || newAltCode.length !== 13) {
+                    alert('Código alternativo debe tener 13 dígitos');
+                    return;
                 }
+
+                if (newAltCode === mainCode) {
+                    alert('El código alternativo no puede ser igual al principal');
+                    return;
+                }
+
+                const newProducts = { ...products };
+                if (!newProducts[mainCode].altCodes) {
+                    newProducts[mainCode].altCodes = [];
+                }
+
+                if (newProducts[mainCode].altCodes.includes(newAltCode)) {
+                    alert('Este código ya existe');
+                    return;
+                }
+
+                if (newProducts[mainCode].altCodes.length >= 3) {
+                    alert('Máximo 3 códigos alternativos');
+                    return;
+                }
+
+                newProducts[mainCode].altCodes.push(newAltCode);
+                setProducts(newProducts);
+                setNewAltCode('');
+            };
+
+            const removeAltCode = (mainCode, altCode) => {
+                const newProducts = { ...products };
+                newProducts[mainCode].altCodes = newProducts[mainCode].altCodes.filter(c => c !== altCode);
+                setProducts(newProducts);
+            };
+
+            const deleteProduct = (code) => {
+                if (!window.confirm(`¿Eliminar ${products[code].name}?`)) return;
+                const newProducts = { ...products };
+                delete newProducts[code];
+                setProducts(newProducts);
             };
 
             return (
@@ -1332,122 +1394,104 @@
                     </div>
 
                     <div className="admin-section">
-                        <h3>Cargar Productos desde Excel</h3>
-                        
-                        <div className="file-upload" onClick={() => document.getElementById('fileInput').click()}>
-                            <div style={{ fontSize: '32px', marginBottom: '12px' }}>📄</div>
-                            <p style={{ fontWeight: 600 }}>Cargar Excel</p>
-                            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>
-                                Columnas: codigo (13 dígitos), nombre, codigo2, codigo3, codigo4 (opcionales)
-                            </p>
+                        <h3>Agregar Producto Manualmente</h3>
+                        <div className="add-product-form">
                             <input
-                                id="fileInput"
-                                type="file"
-                                accept=".xlsx,.xls"
-                                onChange={handleFileUpload}
+                                type="text"
+                                placeholder="Código (13 dígitos)"
+                                value={newProductCode}
+                                onChange={(e) => setNewProductCode(e.target.value)}
+                                maxLength="13"
+                                style={{ flex: '0 1 180px' }}
                             />
+                            <input
+                                type="text"
+                                placeholder="Nombre"
+                                value={newProductName}
+                                onChange={(e) => setNewProductName(e.target.value)}
+                                style={{ flex: '1 1 200px' }}
+                            />
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={addProductManually}
+                                style={{ width: 'auto', padding: '8px 20px' }}
+                            >
+                                Agregar
+                            </button>
                         </div>
+                    </div>
 
-                        <div style={{ marginBottom: '16px' }}>
-                            <strong>O agregar manualmente:</strong>
-                            <div className="add-product-form">
-                                <input
-                                    type="text"
-                                    placeholder="Código (13 dígitos)"
-                                    value={newProductCode}
-                                    onChange={(e) => setNewProductCode(e.target.value)}
-                                    maxLength="13"
-                                    style={{ flex: '0 1 180px' }}
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Nombre"
-                                    value={newProductName}
-                                    onChange={(e) => setNewProductName(e.target.value)}
-                                    style={{ flex: '1 1 200px' }}
-                                />
-                                <button 
-                                    className="btn btn-primary" 
-                                    onClick={handleAdd}
-                                    style={{ width: 'auto', padding: '8px 20px' }}
-                                >
-                                    Agregar
-                                </button>
-                            </div>
+                    <div className="product-catalog">
+                        <div style={{ padding: '12px', background: '#f8fafc', fontWeight: 600, borderBottom: '2px solid #e2e8f0' }}>
+                            Productos ({Object.keys(products).length})
                         </div>
-
-                        <div className="product-catalog">
-                            <div style={{ padding: '12px', background: '#f8fafc', fontWeight: 600, borderBottom: '2px solid #e2e8f0' }}>
-                                Productos ({Object.keys(products).length})
+                        {Object.keys(products).length === 0 ? (
+                            <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+                                No hay productos. Agrega manualmente.
                             </div>
-                            {Object.keys(products).length === 0 ? (
-                                <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-                                    No hay productos. Carga un Excel o agrega manualmente.
-                                </div>
-                            ) : (
-                                Object.entries(products).map(([code, product]) => (
-                                    <div key={code}>
-                                        <div className="catalog-item">
-                                            <div style={{ flex: 1 }}>
-                                                <strong>{product.name}</strong><br/>
-                                                <small style={{ color: '#64748b' }}>
-                                                    Código: {code} • {product.hasWeight ? '⚖️ Con peso' : '📦 Sin peso'}
-                                                </small>
-                                                {product.altCodes && product.altCodes.length > 0 && (
-                                                    <div className="barcode-list">
-                                                        {product.altCodes.map(altCode => (
-                                                            <div key={altCode} className="barcode-chip">
-                                                                {altCode}
-                                                                <button onClick={() => removeAltCode(code, altCode)}>×</button>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                        ) : (
+                            Object.entries(products).map(([code, product]) => (
+                                <div key={code}>
+                                    <div className="catalog-item">
+                                        <div style={{ flex: 1 }}>
+                                            <strong>{product.name}</strong><br/>
+                                            <small style={{ color: '#64748b' }}>
+                                                Código: {code} • {product.hasWeight ? '⚖️ Con peso' : '📦 Sin peso'}
+                                            </small>
+                                            {product.altCodes && product.altCodes.length > 0 && (
+                                                <div className="barcode-list">
+                                                    {product.altCodes.map(altCode => (
+                                                        <div key={altCode} className="barcode-chip">
+                                                            {altCode}
+                                                            <button onClick={() => removeAltCode(code, altCode)}>×</button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button 
+                                                className="small-btn"
+                                                style={{ background: '#e0e7ff', color: '#3730a3' }}
+                                                onClick={() => setEditingProduct(editingProduct === code ? null : code)}
+                                            >
+                                                + Código
+                                            </button>
+                                            <button 
+                                                className="small-btn small-btn-danger"
+                                                onClick={() => deleteProduct(code)}
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {editingProduct === code && (
+                                        <div className="barcode-input-section">
+                                            <div style={{ fontSize: '13px', marginBottom: '8px', color: '#64748b' }}>
+                                                Agregar código alternativo ({product.altCodes?.length || 0}/3):
                                             </div>
                                             <div style={{ display: 'flex', gap: '8px' }}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Código alternativo (13 dígitos)"
+                                                    value={newAltCode}
+                                                    onChange={(e) => setNewAltCode(e.target.value)}
+                                                    maxLength="13"
+                                                    style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
+                                                />
                                                 <button 
-                                                    className="small-btn"
-                                                    style={{ background: '#e0e7ff', color: '#3730a3' }}
-                                                    onClick={() => setEditingProduct(editingProduct === code ? null : code)}
+                                                    className="btn btn-primary"
+                                                    onClick={() => addAltCode(code)}
+                                                    style={{ width: 'auto', padding: '8px 20px' }}
                                                 >
-                                                    + Código
-                                                </button>
-                                                <button 
-                                                    className="small-btn small-btn-danger"
-                                                    onClick={() => deleteProduct(code)}
-                                                >
-                                                    Eliminar
+                                                    Agregar
                                                 </button>
                                             </div>
                                         </div>
-                                        {editingProduct === code && (
-                                            <div className="barcode-input-section">
-                                                <div style={{ fontSize: '13px', marginBottom: '8px', color: '#64748b' }}>
-                                                    Agregar código alternativo ({product.altCodes?.length || 0}/3):
-                                                </div>
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Código alternativo (13 dígitos)"
-                                                        value={newAltCode}
-                                                        onChange={(e) => setNewAltCode(e.target.value)}
-                                                        maxLength="13"
-                                                        style={{ flex: 1, padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px' }}
-                                                    />
-                                                    <button 
-                                                        className="btn btn-primary"
-                                                        onClick={() => handleAddAltCode(code)}
-                                                        style={{ width: 'auto', padding: '8px 20px' }}
-                                                    >
-                                                        Agregar
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             );
@@ -1524,7 +1568,30 @@
             );
         };
 
-        ReactDOM.render(<App />, document.getElementById('root'));
+        
+// Añadir códigos de la columna 'codigo 3' del Excel a las altCodes (insertado automáticamente)
+(function addCodigo3(){
+    const CODIGO_3_MAP = {
+        '2700003': '2901306',
+        '2700002': '2901304',
+        '2700006': '2901307',
+        '2700004': '2901305',
+        '2700005': '2901309',
+        '2700001': '2901303',
+        '2700050': '2901308',
+        '2700049': '2901302'
+    };
+    for (const [main, c3] of Object.entries(CODIGO_3_MAP)) {
+        try {
+            if (typeof DEFAULT_PRODUCTS !== 'undefined' && DEFAULT_PRODUCTS[main]) {
+                DEFAULT_PRODUCTS[main].altCodes = DEFAULT_PRODUCTS[main].altCodes || [];
+                if (!DEFAULT_PRODUCTS[main].altCodes.includes(c3)) DEFAULT_PRODUCTS[main].altCodes.push(c3);
+            }
+        } catch(e) { console.error('Error applying codigo3 map', e); }
+    }
+})();
+
+ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>
 </html>
