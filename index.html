@@ -850,25 +850,6 @@
             const [toast, setToast] = React.useState(null);
             const scannerInputRef = React.useRef(null);
 
-            React.useEffect(() => {
-                const saved = localStorage.getItem('warehouse_products');
-                if (saved) {
-                    try {
-                        setProducts(JSON.parse(saved));
-                    } catch (e) {
-                        console.error('Error loading products:', e);
-                        setProducts(DEFAULT_PRODUCTS);
-                    }
-                } else {
-                    setProducts(DEFAULT_PRODUCTS);
-                }
-            }, []);
-
-            React.useEffect(() => {
-                if (Object.keys(products).length > 0) {
-                    localStorage.setItem('warehouse_products', JSON.stringify(products));
-                }
-            }, [products]);
 
             const showToast = (message, type = 'success') => {
                 setToast({ message, type });
