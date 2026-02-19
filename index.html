@@ -1322,9 +1322,17 @@
             const [editingProduct, setEditingProduct] = React.useState(null);
             const [newAltCode, setNewAltCode] = React.useState('');
 
+            const isWeightManualCode = (code) => ['270', '272', '279'].some(p => code.startsWith(p));
+
             const addProductManually = () => {
-                if (!newProductCode || !newProductName || newProductCode.length !== 13) {
-                    alert('Código debe ser 13 dígitos y nombre requerido');
+                const weightCode = isWeightManualCode(newProductCode);
+                const validLength = weightCode
+                    ? (newProductCode.length === 7 || newProductCode.length === 13)
+                    : newProductCode.length === 13;
+                if (!newProductCode || !newProductName || !validLength) {
+                    alert(weightCode
+                        ? 'Para códigos 270/272/279: ingresá 7 dígitos (o 13 completos). Nombre requerido.'
+                        : 'Código debe ser 13 dígitos y nombre requerido');
                     return;
                 }
 
@@ -1337,8 +1345,14 @@
             };
 
             const addAltCode = (mainCode) => {
-                if (!newAltCode || newAltCode.length !== 13) {
-                    alert('Código alternativo debe tener 13 dígitos');
+                const weightAlt = isWeightManualCode(newAltCode);
+                const validAltLength = weightAlt
+                    ? (newAltCode.length === 7 || newAltCode.length === 13)
+                    : newAltCode.length === 13;
+                if (!newAltCode || !validAltLength) {
+                    alert(weightAlt
+                        ? 'Código alternativo 270/272/279: 7 dígitos (o 13 completos)'
+                        : 'Código alternativo debe tener 13 dígitos');
                     return;
                 }
 
@@ -1383,7 +1397,8 @@
             return (
                 <div>
                     <div className="info-box">
-                        <strong>ℹ️ Detección automática de peso:</strong> Los códigos que comienzan con 27, 29 o 21 se marcan automáticamente como "con peso". Los demás como "sin peso".
+                        <strong>ℹ️ Detección automática de peso:</strong> Los códigos que comienzan con 27, 29 o 21 se marcan automáticamente como "con peso". Los demás como "sin peso".<br/>
+                        <strong>Ingreso manual de códigos con peso (270/272/279):</strong> Podés ingresar solo los primeros 7 dígitos; el sistema los reconoce sin necesidad del dígito verificador.
                     </div>
 
                     <div className="admin-section">
@@ -1391,11 +1406,11 @@
                         <div className="add-product-form">
                             <input
                                 type="text"
-                                placeholder="Código (13 dígitos)"
+                                placeholder="Código (13 dígitos, ó 7 si es 270/272/279)"
                                 value={newProductCode}
                                 onChange={(e) => setNewProductCode(e.target.value)}
                                 maxLength="13"
-                                style={{ flex: '0 1 180px' }}
+                                style={{ flex: '0 1 240px' }}
                             />
                             <input
                                 type="text"
@@ -1466,7 +1481,7 @@
                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                 <input
                                                     type="text"
-                                                    placeholder="Código alternativo (13 dígitos)"
+                                                    placeholder="Código alternativo (13 dígitos, ó 7 si es 270/272/279)"
                                                     value={newAltCode}
                                                     onChange={(e) => setNewAltCode(e.target.value)}
                                                     maxLength="13"
